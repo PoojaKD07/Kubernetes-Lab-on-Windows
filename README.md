@@ -1,6 +1,6 @@
 # Kubernetes Lab on Windows – NGINX Deployment, Scaling & Self-Healing
 
-## Project Overview
+## 1. Project Overview
 
 This project demonstrates the implementation of a local three-node Kubernetes cluster on Windows using Docker Desktop and kind (Kubernetes IN Docker).
 
@@ -8,7 +8,7 @@ The lab focuses on deploying an NGINX web application, managing multiple replica
 
 The cluster consists of one control-plane node and two worker nodes, with all Kubernetes nodes running as Docker containers.
 
-## Objectives
+## 2. Objectives
 
 - Set up a local Kubernetes environment on Windows.
 - Create a three-node Kubernetes cluster using kind.
@@ -19,7 +19,7 @@ The cluster consists of one control-plane node and two worker nodes, with all Ku
 - Test Kubernetes self-healing by manually deleting a Pod.
 - Understand how Kubernetes maintains the desired application state.
 
-## Technologies Used
+## 3. Technologies Used
 
 | Technology | Purpose |
 |---|---|
@@ -32,22 +32,22 @@ The cluster consists of one control-plane node and two worker nodes, with all Ku
 | NGINX | Web server application |
 | YAML | Cluster configuration |
 
-## System Architecture
+## 4. System Architecture
 
 The lab uses a three-node Kubernetes architecture.
 
 ```text
                  Windows Laptop
                        |
-                PowerShell
+                   PowerShell
                        |
-               Docker Desktop
+                 Docker Desktop
                        |
-                 KIND Cluster
+                   KIND Cluster
                        |
           +------------+------------+
           |                         |
-   Control Plane                Worker Nodes
+     Control Plane             Worker Nodes
           |                         |
   kind-control-plane       +---------+---------+
                            |                   |
@@ -62,9 +62,9 @@ The lab uses a three-node Kubernetes architecture.
 
 **Pods:** Smallest deployable units in Kubernetes that contain application containers.
 
-## Implementation – Six Lab Stages
+## 5. Implementation – Six Lab Stages
 
-### 1. Installation of Required Tools
+### Stage 1: Installation of Required Tools
 
 The following tools were installed and configured:
 
@@ -83,7 +83,7 @@ winget install -e --id Kubernetes.kind
 
 Docker Desktop was configured to use the WSL 2 backend.
 
-### 2. Verification of Tools
+### Stage 2: Verification of Tools
 
 The installed tools were verified using:
 
@@ -96,7 +96,7 @@ kind version
 
 These commands verified Docker functionality, container execution, kubectl installation, and kind installation.
 
-### 3. Creation of Kubernetes Cluster Configuration
+### Stage 3: Creation of Kubernetes Cluster Configuration
 
 A configuration file named `kind-config.yaml` was created to define the cluster structure.
 
@@ -115,7 +115,7 @@ This configuration specifies:
 - One control-plane node.
 - Two worker nodes.
 
-### 4. Creation and Verification of the Cluster
+### Stage 4: Creation and Verification of the Cluster
 
 The Kubernetes cluster was created using:
 
@@ -150,9 +150,9 @@ The cluster contains three nodes:
 | kind-worker | Worker |
 | kind-worker2 | Worker |
 
-All three nodes were successfully initialized and reached the Ready state.
+All three nodes successfully reached the Ready state.
 
-### 5. Deployment of NGINX Application
+### Stage 5: Deployment of NGINX Application
 
 An NGINX Deployment named `web` was created with three replicas.
 
@@ -180,17 +180,17 @@ The command displays:
 - Pod IP addresses
 - Worker-node placement
 
-Individual Pod details were inspected using:
+Individual Pod details can be inspected using:
 
 ```powershell
-kubectl describe pod <actual-pod-name>
+kubectl describe pod ACTUAL_POD_NAME
 ```
 
-The actual Pod name must be used without angle brackets.
+Replace `ACTUAL_POD_NAME` with an actual Pod name from the command output.
 
-**Observation:** The three NGINX Pods were successfully scheduled across the two worker nodes.
+**Observation:** The three NGINX Pods were scheduled across the two worker nodes. The initial screenshot captures them in the `ContainerCreating` state during startup.
 
-### 6. Scaling and Self-Healing
+### Stage 6: Scaling and Self-Healing
 
 #### A. Scaling from 3 to 6 Replicas
 
@@ -207,9 +207,7 @@ kubectl get deployments
 kubectl get pods -o wide
 ```
 
-**Observation:** Six NGINX Pods reached the Running state, with all six showing `1/1` readiness.
-
-The Pods were distributed across both worker nodes.
+**Observation:** All six NGINX Pods reached the `1/1 Running` state and were distributed across both worker nodes.
 
 #### B. Testing Self-Healing
 
@@ -218,42 +216,51 @@ To test Kubernetes self-healing, one running Pod was manually deleted.
 Command used:
 
 ```powershell
-kubectl delete pod <actual-pod-name>
-```
-
-The Pod selected in the experiment was:
-
-```powershell
 kubectl delete pod web-5fc9f4bf66-826lz
 ```
 
-The deletion was confirmed by Kubernetes.
+Kubernetes confirmed that the selected Pod was deleted successfully.
 
-The Deployment controller is responsible for creating a replacement Pod to maintain the desired replica count.
+The Deployment controller automatically created a replacement Pod to maintain the desired replica count.
 
 Verification commands:
 
 ```powershell
-kubectl get pods
+kubectl get pods -o wide
 kubectl get deployments
 ```
 
-**Expected result:** Kubernetes creates a replacement Pod with a new name, restoring the Deployment to six ready replicas.
+**Actual Result:**
 
-## Results and Observations
+The replacement Pod created by Kubernetes was:
+
+```text
+web-5fc9f4bf66-whfgr
+```
+
+The final Deployment status was:
+
+| Deployment | READY | UP-TO-DATE | AVAILABLE |
+|---|---:|---:|---:|
+| web | 6/6 | 6 | 6 |
+
+This confirms that Kubernetes successfully restored the desired six replicas after Pod deletion.
+
+## 6. Results and Observations
 
 | Experiment | Result |
 |---|---|
 | Kubernetes cluster creation | Successful |
 | Control-plane node | Ready |
 | Worker nodes | Two Ready nodes |
-| Initial NGINX deployment | 3 replicas |
-| Initial Pod status | Running |
+| Initial NGINX deployment | 3 replicas created |
+| Initial Pod status | ContainerCreating during startup |
 | Scaling operation | Increased from 3 to 6 |
 | Six-replica verification | All 6 Pods Running |
 | Pod scheduling | Distributed across two workers |
 | Manual Pod deletion | Successfully deleted |
-| Self-healing | Replacement expected; final verification screenshot to be added |
+| Self-healing | Replacement Pod created automatically |
+| Final deployment status | 6/6 READY, 6 UP-TO-DATE, 6 AVAILABLE |
 
 ### Pod Distribution Observation
 
@@ -267,19 +274,22 @@ During the six-replica experiment, the observed distribution was:
 
 The distribution represents the observed execution. Kubernetes scheduling can produce different placements in another run.
 
-## Screenshots and Experimental Evidence
+## 7. Screenshots and Experimental Evidence
 
-### 1. Initial Pod Creation
+The following screenshots document the actual execution of the Kubernetes lab.
 
-The screenshot captures the initial state where Pods were in `ContainerCreating`.
+### 7.1 Initial Pod Creation
 
-This is a temporary startup state while containers are being initialized.
+The screenshot captures the initial state where the three NGINX Pods were in `ContainerCreating`.
+
+This is a temporary startup state while the containers are being initialized.
 
 ![Initial Pod Creation](screenshots/01-initial-pod-startup.png)
 
-### 2. Scaling and Pod Distribution
+### 7.2 Scaling and Pod Distribution
 
 The screenshot demonstrates:
+
 - Scaling the Deployment from three to six replicas.
 - Six NGINX Pods reaching `1/1 Running`.
 - Pod distribution across two worker nodes.
@@ -287,24 +297,15 @@ The screenshot demonstrates:
 
 ![Scaling and Pod Deletion](screenshots/02-scaling-and-pod-deletion.png)
 
-### 3. Self-Healing Verification
+### 7.3 Self-Healing Verification
 
-After deleting one Pod, execute:
+After deleting one Pod, Kubernetes automatically created a replacement Pod named `web-5fc9f4bf66-whfgr`.
 
-```powershell
-kubectl get pods -o wide
-kubectl get deployments
-```
+The screenshot verifies that all six Pods returned to the Running state and the Deployment reached `6/6` ready replicas.
 
-Capture the output after the replacement Pod is created and the Deployment returns to `6/6` ready replicas.
+![Self-Healing Verification](screenshots/03-self-healing.png)
 
-Save the screenshot as:
-
-`screenshots/03-self-healing-replacement.png`
-
-This provides complete visual evidence of the self-healing experiment.
-
-## Key Kubernetes Concepts Learned
+## 8. Key Kubernetes Concepts Learned
 
 | Concept | Understanding |
 |---|---|
@@ -317,24 +318,24 @@ This provides complete visual evidence of the self-healing experiment.
 | Scaling | Changes the number of application replicas |
 | Self-Healing | Restores the desired state when a managed Pod is deleted |
 
-## Troubleshooting
+## 9. Troubleshooting
 
 | Problem | Solution |
 |---|---|
 | Access denied while creating a folder | Use Desktop or another writable directory instead of System32 |
-| YAML parsing error | Check line breaks, indentation, and remove copied line numbers |
-| Docker connection error | Start Docker Desktop and wait for Engine running |
+| YAML parsing error | Check line breaks and indentation; remove copied line numbers |
+| Docker connection error | Start Docker Desktop and wait until the engine is running |
 | kubectl or kind not recognized | Reopen PowerShell after installation |
 | Pod shows ContainerCreating | Wait for container initialization and check again |
 | ImagePullBackOff | Check internet connectivity and inspect Pod Events |
-| PowerShell `<` operator error | Replace placeholders with actual names without angle brackets |
+| PowerShell angle-bracket error | Replace placeholders with actual names without angle brackets |
 
-## Conclusion
+## 10. Conclusion
 
 This lab successfully demonstrates the fundamental workflow of Kubernetes container orchestration on a Windows environment.
 
 A three-node Kubernetes cluster was created using kind, and an NGINX application was deployed with three replicas. The application was subsequently scaled to six replicas, and Pod scheduling across worker nodes was observed.
 
-A manual Pod deletion experiment was also performed to study Kubernetes self-healing behavior.
+A manual Pod deletion experiment was also performed to study Kubernetes self-healing behavior. Kubernetes automatically created a replacement Pod and restored the Deployment to six available replicas.
 
 Through this implementation, the lab provides practical understanding of cluster architecture, container orchestration, Deployment management, replica scaling, Pod scheduling, and automated workload recovery.
